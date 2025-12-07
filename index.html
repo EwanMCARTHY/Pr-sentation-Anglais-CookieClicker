@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim V3</title>
+    <title>Enterprise Sim V4</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -16,7 +16,7 @@
         /* Layout */
         .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 95vh; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
-        .timer-box { font-family: monospace; font-size: 1.5rem; color: var(--red); background: #000; padding: 5px 10px; border-radius: 4px; }
+        .timer-box { font-family: monospace; font-size: 1.5rem; color: var(--text); background: #000; padding: 5px 10px; border-radius: 4px; border: 1px solid #444; }
         
         /* Screens */
         #setup-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 15px; }
@@ -29,14 +29,17 @@
         .stat-val { font-size: 1.4rem; font-weight: bold; }
         .sub-stat { font-size: 0.8rem; color: var(--green); margin-top: 2px; }
 
-        /* Chart & Table */
-        .chart-container { background: #111; border: 1px solid #444; border-radius: 6px; height: 140px; position: relative; margin-bottom: 10px; overflow: hidden; }
+        /* Chart */
+        .chart-container { background: #111; border: 1px solid #444; border-radius: 6px; height: 120px; position: relative; margin-bottom: 10px; overflow: hidden; }
         svg { width: 100%; height: 100%; }
         .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
 
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; display: none; }
-        .data-table th, .data-table td { border: 1px solid #444; padding: 8px; text-align: center; }
+        /* Real-time Table */
+        .table-container { margin-bottom: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .data-table th, .data-table td { border: 1px solid #444; padding: 4px; text-align: center; color: #aaa; }
         .data-table th { background: #333; color: var(--accent); }
+        .data-table .filled { color: #fff; font-weight: bold; background: #2a2a2a; }
 
         /* Buttons */
         .btn { 
@@ -45,29 +48,23 @@
             font-size: 1rem; border-radius: 6px; 
             cursor: pointer; width: 100%; box-shadow: 0 3px #111;
         }
-        .btn:active { transform: translateY(2px); box-shadow: 0 0 #111; }
         
         .btn-action { 
             background: var(--accent); color: #fff; font-weight: bold; font-size: 1.4rem; 
-            height: 90px; display: flex; align-items: center; justify-content: center;
-            margin-top: 10px; box-shadow: 0 5px #1a5276;
+            height: 80px; display: flex; align-items: center; justify-content: center;
+            margin-top: 5px; box-shadow: 0 5px #1a5276;
         }
         .btn-action:active { transform: translateY(4px); box-shadow: 0 0 #000; }
         .btn-action:disabled { background: #555; color: #888; box-shadow: none; transform: translateY(4px); }
 
         .btn-invest { 
             border: 2px solid var(--gold); color: var(--gold); background: transparent; 
-            display: none; margin-top: 10px; font-weight: bold;
+            display: none; margin-top: 10px; font-weight: bold; transition: all 0.2s;
         }
+        .btn-invest:disabled { border-color: #555; color: #555; cursor: not-allowed; }
         
         /* Log */
-        #log { font-family: monospace; font-size: 0.75rem; color: #888; height: 60px; overflow-y: hidden; text-align: left; border-top: 1px solid #333; padding-top: 5px; margin-top: auto; }
-
-        /* Animations */
-        .flash-green { animation: flashG 0.5s; }
-        .flash-red { animation: flashR 0.5s; }
-        @keyframes flashG { 0% { color: #fff; background: var(--green); } 100% { background: var(--bg); } }
-        @keyframes flashR { 0% { color: #fff; background: var(--red); } 100% { background: var(--bg); } }
+        #log { font-family: monospace; font-size: 0.7rem; color: #666; height: 40px; overflow-y: hidden; text-align: left; border-top: 1px solid #333; padding-top: 5px; margin-top: auto; }
 
     </style>
 </head>
@@ -79,17 +76,17 @@
         <div>
             <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
             <h1 style="margin:0; color:var(--accent);">ENTERPRISE SIM</h1>
-            <p style="color:#888;">Select Strategy</p>
+            <p style="color:#888;">Select Strategy (2 min run)</p>
         </div>
         <button class="btn" onclick="selectStrat('A')">STRATEGY A<br><small style="color:#aaa">Workforce (Labor Intensive)</small></button>
         <button class="btn" onclick="selectStrat('B')">STRATEGY B<br><small style="color:#aaa">Automation (Capital Intensive)</small></button>
-        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">Venture Capital (High Risk)</small></button>
+        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">High Yield (Risk Intensive)</small></button>
     </div>
 
     <div id="game-screen">
         <div class="header">
-            <div style="font-weight:bold; color:#ccc;" id="team-name">TEAM</div>
-            <div id="timer" class="timer-box">WAITING...</div>
+            <div style="font-weight:bold; font-size: 0.9rem; color:#ccc;" id="team-name">TEAM</div>
+            <div id="timer" class="timer-box">WAITING</div>
         </div>
 
         <div class="chart-container">
@@ -99,25 +96,46 @@
             <div style="position: absolute; top:5px; left:5px; font-size:0.6rem; color:#666;">YIELD CURVE</div>
         </div>
 
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>30s</th>
+                        <th>60s</th>
+                        <th>90s</th>
+                        <th>120s</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="cell-30">-</td>
+                        <td id="cell-60">-</td>
+                        <td id="cell-90">-</td>
+                        <td id="cell-120">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="hud-grid">
             <div class="stat-box">
                 <div class="stat-label">TOTAL OUTPUT</div>
                 <div class="stat-val" id="score">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">STAMINA (Clicks)</div>
+                <div class="stat-label">STAMINA</div>
                 <div class="stat-val" id="stock">0</div>
                 <div class="sub-stat" id="regen-msg">Regen in 5s</div>
             </div>
         </div>
 
-        <div id="b-stats" style="display:none; font-size:0.8rem; color:var(--green); margin-bottom:5px;">
-            Factories: <span id="factories-count">0</span> | Auto-Rate: +<span id="auto-rate-disp">0</span>/s
+        <div id="invest-stats" style="display:none; font-size:0.8rem; color:var(--green); margin-bottom:5px;">
+            Investments: <span id="invest-count">0</span> | Yield: +<span id="auto-rate-disp">0</span>/s
         </div>
 
         <div id="controls-area">
             <button id="main-btn" class="btn btn-action" onclick="handleMainClick()">
-                START / PRODUCE
+                START
             </button>
             <div id="cooldown-text" style="font-size:0.8rem; color:#666; margin-top:5px; visibility:hidden;">Recovering Stamina...</div>
 
@@ -125,230 +143,199 @@
                 </button>
         </div>
 
-        <table id="result-table" class="data-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>1 min</th>
-                    <th>2 min</th>
-                    <th>3 min</th>
-                    <th>4 min</th>
-                    <th>5 min</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr id="table-row">
-                    <td>Score</td>
-                    <td id="s-1">-</td>
-                    <td id="s-2">-</td>
-                    <td id="s-3">-</td>
-                    <td id="s-4">-</td>
-                    <td id="s-5">-</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div id="log">System Ready. Wait for signal to start.</div>
+        <div id="log">System Ready. Wait for start.</div>
     </div>
 
 </div>
 
 <script>
     // --- CONFIGURATION ---
-    const GAME_DURATION = 300; // 5 minutes
+    const GAME_DURATION = 120; // 2 minutes (Seconds)
     const STOCK_REGEN_TIME = 5000;
-    const CHART_UPDATE_INTERVAL = 2000; 
+    const INVEST_COOLDOWN = 5000;
+    const CHART_UPDATE_INTERVAL = 1000; 
 
     // --- GAME STATE ---
     let state = {
         started: false,
         score: 0,
-        stock: 2, // Start with some stamina
+        stock: 2, 
         strategy: '',
         timeLeft: GAME_DURATION,
         history: [], 
-        checkpoints: {},
         
-        // Strat B specific
-        factories: 0,
+        // Investment logic
+        investCount: 0,
         autoRate: 0,
+        nextInvestTime: 0, // Timestamp when invest is available again
 
-        // Cooldown timer ref
-        regenTimer: null
+        // Timers
+        loops: {}
     };
-
-    let loops = {}; // Store intervals
 
     function selectStrat(s) {
         state.strategy = s;
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
 
-        const btn = document.getElementById('main-btn');
         const invBtn = document.getElementById('invest-btn');
         const teamLbl = document.getElementById('team-name');
 
         if (s === 'A') {
             teamLbl.innerText = "STRAT A: WORKFORCE";
-            document.documentElement.style.setProperty('--accent', '#3498db'); // Blue
+            document.documentElement.style.setProperty('--accent', '#3498db'); 
         } 
         else if (s === 'B') {
             teamLbl.innerText = "STRAT B: AUTOMATION";
             document.documentElement.style.setProperty('--accent', '#2ecc71'); // Green
             invBtn.style.display = 'block';
             invBtn.innerHTML = "🏭 BUY FACTORY (Cost: 50)";
-            document.getElementById('b-stats').style.display = 'block';
+            document.getElementById('invest-stats').style.display = 'block';
         } 
         else if (s === 'C') {
-            teamLbl.innerText = "STRAT C: VENTURE CAP.";
+            teamLbl.innerText = "STRAT C: HIGH YIELD";
             document.documentElement.style.setProperty('--accent', '#f1c40f'); // Gold
             invBtn.style.display = 'block';
-            invBtn.innerHTML = "🚀 VENTURE DEAL (Cost: 50)";
+            invBtn.innerHTML = "🚀 RISK INVEST (Cost: 50)";
+            document.getElementById('invest-stats').style.display = 'block';
         }
 
         updateUI();
     }
 
-    // Triggered by the main button
     function handleMainClick() {
         if (!state.started) {
             startGame();
-            // Don't produce on the start click, just start
-            document.getElementById('main-btn').innerText = "PRODUCE (Click)";
+            document.getElementById('main-btn').innerText = "PRODUCE";
             return;
         }
-
         performAction();
     }
 
     function startGame() {
         state.started = true;
+        state.nextInvestTime = Date.now(); // Available immediately
         log("SIMULATION STARTED.");
         
         // 1. Timer
-        loops.timer = setInterval(() => {
+        state.loops.timer = setInterval(() => {
             state.timeLeft--;
             
-            // Checkpoints logic
+            // Checkpoints (30s, 60s, 90s, 120s)
             let elapsed = GAME_DURATION - state.timeLeft;
-            if (elapsed % 60 === 0 && elapsed > 0) {
-                recordCheckpoint(elapsed / 60);
+            if (elapsed % 30 === 0 && elapsed > 0) {
+                recordCheckpoint(elapsed);
             }
 
-            // Display
             let mins = Math.floor(state.timeLeft / 60).toString().padStart(2, '0');
             let secs = (state.timeLeft % 60).toString().padStart(2, '0');
             document.getElementById('timer').innerText = `${mins}:${secs}`;
-            document.getElementById('timer').style.color = "#fff"; // active color
+            document.getElementById('timer').style.color = "#fff"; 
 
             if (state.timeLeft <= 0) endGame();
         }, 1000);
 
         // 2. Stock Regen
-        loops.regen = setInterval(() => {
+        state.loops.regen = setInterval(() => {
             state.stock++;
             updateUI();
         }, STOCK_REGEN_TIME);
 
-        // 3. Auto Production (B)
-        loops.auto = setInterval(() => {
+        // 3. Auto Production (Yield)
+        state.loops.auto = setInterval(() => {
             if (state.autoRate > 0) {
                 state.score += state.autoRate;
                 updateUI();
             }
         }, 1000);
 
-        // 4. Chart
-        loops.chart = setInterval(() => {
+        // 4. Chart & UI Refresh (for cooldowns)
+        state.loops.chart = setInterval(() => {
             let progress = (GAME_DURATION - state.timeLeft) / GAME_DURATION;
             state.history.push({ p: progress, v: state.score });
             drawChart();
-        }, CHART_UPDATE_INTERVAL);
+            updateUI(); // Check cooldowns frequently
+        }, 500); // 0.5s refresh for smoother UI
     }
 
     function performAction() {
-        if (state.stock <= 0) {
-            log("Exhausted! Wait for regen.");
-            return;
-        }
+        if (state.stock <= 0) return;
 
-        let gain = 5; // Base gain for everyone
-        
-        // Strat A is manual labor optimized, maybe slightly better clicks? 
-        // Let's keep clicks equal to show that B and C need capital to diverge.
-        
+        let gain = 5; 
         state.score += gain;
         state.stock--;
-        
         updateUI();
     }
 
     function handleInvestment() {
         let cost = 50;
         
+        // Checks
+        if (Date.now() < state.nextInvestTime) return; // Cooldown active
         if (state.score < cost) {
-            log(`Need ${cost} capital!`);
+            log(`Need ${cost} output!`);
             return;
         }
 
-        // Pay cost
+        // Execute
         state.score -= cost;
+        state.nextInvestTime = Date.now() + INVEST_COOLDOWN; // Set Cooldown
+        state.investCount++;
+
+        let addedYield = 0;
+        let msg = "";
 
         if (state.strategy === 'B') {
-            // Permanent Upgrade
-            state.factories++;
-            state.autoRate += 1.5; // NERFED from 2
-            log(`Factory built! Output +1.5/s`);
+            // Deterministic
+            addedYield = 1.5; 
+            msg = "Factory built (+1.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // One-time risky return
-            let r = Math.random(); // 0.0 to 1.0
-            let outcome = 0;
-            let msg = "";
-
-            if (r < 0.20) { 
-                outcome = 0; // 20% Total fail
-                msg = "Startup Failed (0)"; 
-                flashColor('red');
+            // Probabilistic Yield
+            let r = Math.random(); 
+            
+            if (r < 0.30) { 
+                addedYield = 0; // 30% Fail
+                msg = "Invest Failed (+0/s)";
             } 
-            else if (r < 0.60) {
-                outcome = 40; // 40% Small Loss
-                msg = "Bad Exit (40)";
-            }
-            else if (r < 0.90) {
-                outcome = 80; // 30% Profit
-                msg = "Good ROI (80)";
-                flashColor('green');
+            else if (r < 0.70) {
+                addedYield = 2; // 40% Good
+                msg = "Standard Return (+2/s)";
             }
             else {
-                outcome = 200; // 10% Unicorn
-                msg = "UNICORN! (200)";
-                flashColor('gold');
+                addedYield = 6; // 30% Excellent
+                msg = "HIGH YIELD! (+6/s)";
             }
-
-            state.score += outcome;
-            log(`Deal result: ${msg}`);
         }
 
+        state.autoRate += addedYield;
+        log(msg);
         updateUI();
     }
 
-    function recordCheckpoint(minute) {
-        state.checkpoints[minute] = Math.floor(state.score);
-        // Update table immediately if visible, or just store it
-        let cell = document.getElementById(`s-${minute}`);
-        if(cell) cell.innerText = Math.floor(state.score);
-        log(`Min ${minute} stats recorded.`);
+    function recordCheckpoint(elapsed) {
+        let cellId = `cell-${elapsed}`;
+        let cell = document.getElementById(cellId);
+        if (cell) {
+            cell.innerText = Math.floor(state.score);
+            cell.classList.add('filled');
+        }
     }
 
     function updateUI() {
         document.getElementById('score').innerText = Math.floor(state.score);
         document.getElementById('stock').innerText = state.stock;
 
-        // Button State
+        // Invest Stats
+        if (state.strategy !== 'A') {
+            document.getElementById('invest-count').innerText = state.investCount;
+            // Round to 1 decimal
+            document.getElementById('auto-rate-disp').innerText = Math.round(state.autoRate * 10) / 10;
+        }
+
+        // Main Button Logic
         const btn = document.getElementById('main-btn');
         const cdTxt = document.getElementById('cooldown-text');
-        
         if (state.started) {
             if (state.stock > 0) {
                 btn.disabled = false;
@@ -361,18 +348,36 @@
             }
         }
 
-        // Stats for B
-        if (state.strategy === 'B') {
-            document.getElementById('factories-count').innerText = state.factories;
-            document.getElementById('auto-rate-disp').innerText = state.autoRate;
+        // Invest Button Logic (Cooldown & Cost)
+        const invBtn = document.getElementById('invest-btn');
+        if (state.strategy !== 'A') {
+            let remaining = Math.ceil((state.nextInvestTime - Date.now()) / 1000);
+            
+            if (remaining > 0) {
+                invBtn.disabled = true;
+                invBtn.innerText = `WAIT... (${remaining}s)`;
+                invBtn.style.borderColor = "#555";
+            } else {
+                let label = state.strategy === 'B' ? "🏭 BUY FACTORY (50)" : "🚀 RISK INVEST (50)";
+                if (state.score >= 50) {
+                    invBtn.disabled = false;
+                    invBtn.innerText = label;
+                    invBtn.style.borderColor = state.strategy === 'B' ? "var(--green)" : "var(--gold)";
+                    invBtn.style.color = state.strategy === 'B' ? "var(--green)" : "var(--gold)";
+                } else {
+                    invBtn.disabled = true;
+                    invBtn.innerText = label; // Keep label but grey out
+                    invBtn.style.borderColor = "#555";
+                    invBtn.style.color = "#555";
+                }
+            }
         }
     }
 
     function drawChart() {
         if (state.history.length < 2) return;
         const line = document.getElementById('chart-line');
-        
-        let maxVal = 100;
+        let maxVal = 10;
         state.history.forEach(h => { if(h.v > maxVal) maxVal = h.v; });
         
         let points = state.history.map(h => {
@@ -384,31 +389,20 @@
     }
 
     function endGame() {
-        for (let t in loops) clearInterval(loops[t]);
+        for (let t in state.loops) clearInterval(state.loops[t]);
         
-        // Final checkpoint
-        recordCheckpoint(5);
-        drawChart(); // Final draw
+        recordCheckpoint(GAME_DURATION);
+        drawChart();
+        updateUI();
 
-        // UI Transformation for Results
-        document.getElementById('controls-area').style.display = 'none'; // Hide buttons
-        document.getElementById('timer').innerText = "FINISHED";
-        document.getElementById('result-table').style.display = 'table'; // Show table
-        
-        log("Simulation Complete. Analyze data.");
+        document.getElementById('controls-area').style.display = 'none'; 
+        document.getElementById('timer').innerText = "DONE";
+        document.getElementById('log').innerText = "Test Complete.";
     }
 
     function log(msg) {
         document.getElementById('log').innerText = `> ${msg}`;
     }
-
-    function flashColor(c) {
-        let color = c === 'red' ? '#e74c3c' : (c === 'gold' ? '#f1c40f' : '#2ecc71');
-        let hud = document.querySelector('.hud-grid');
-        hud.style.backgroundColor = color;
-        setTimeout(() => { hud.style.backgroundColor = 'transparent'; }, 200);
-    }
-
 </script>
 </body>
 </html>

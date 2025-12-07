@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim FINAL</title>
+    <title>Enterprise Sim V6 (Hardcore)</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -66,6 +66,12 @@
         /* Log */
         #log { font-family: monospace; font-size: 0.7rem; color: #666; height: 40px; overflow-y: hidden; text-align: left; border-top: 1px solid #333; padding-top: 5px; margin-top: auto; }
 
+        /* Animations */
+        .flash-red { animation: fRed 0.5s; }
+        .flash-gold { animation: fGold 0.5s; }
+        @keyframes fRed { 0% { background-color: var(--red); } 100% { background-color: var(--panel); } }
+        @keyframes fGold { 0% { background-color: var(--gold); } 100% { background-color: var(--panel); } }
+
     </style>
 </head>
 <body>
@@ -80,7 +86,7 @@
         </div>
         <button class="btn" onclick="selectStrat('A')">STRATEGY A<br><small style="color:#aaa">Workforce (Labor Intensive)</small></button>
         <button class="btn" onclick="selectStrat('B')">STRATEGY B<br><small style="color:#aaa">Automation (Capital Intensive)</small></button>
-        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">Coin Flip (50% Win / 50% Lose)</small></button>
+        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">Hedge Fund (Extreme Risk)</small></button>
     </div>
 
     <div id="game-screen">
@@ -150,10 +156,10 @@
 
 <script>
     // --- CONFIGURATION ---
-    const GAME_DURATION = 120; // 2 minutes (Seconds)
+    const GAME_DURATION = 120; // 2 minutes
     const STOCK_REGEN_TIME = 5000;
     const INVEST_COOLDOWN = 5000;
-    const CHART_UPDATE_INTERVAL = 1000; 
+    const CHART_UPDATE_INTERVAL = 500; 
 
     // --- GAME STATE ---
     let state = {
@@ -164,12 +170,10 @@
         timeLeft: GAME_DURATION,
         history: [], 
         
-        // Investment logic
         investCount: 0,
         autoRate: 0,
-        nextInvestTime: 0, // Timestamp when invest is available again
+        nextInvestTime: 0, 
 
-        // Timers
         loops: {}
     };
 
@@ -193,10 +197,10 @@
             document.getElementById('invest-stats').style.display = 'block';
         } 
         else if (s === 'C') {
-            teamLbl.innerText = "STRAT C: HIGH YIELD";
+            teamLbl.innerText = "STRAT C: HEDGE FUND";
             document.documentElement.style.setProperty('--accent', '#f1c40f'); // Gold
             invBtn.style.display = 'block';
-            invBtn.innerHTML = "🚀 RISK INVEST (Cost: 50)";
+            invBtn.innerHTML = "🚀 LEVERAGE DEAL (Cost: 50)";
             document.getElementById('invest-stats').style.display = 'block';
         }
 
@@ -214,14 +218,12 @@
 
     function startGame() {
         state.started = true;
-        state.nextInvestTime = Date.now(); // Available immediately
+        state.nextInvestTime = Date.now(); 
         log("SIMULATION STARTED.");
         
-        // 1. Timer
         state.loops.timer = setInterval(() => {
             state.timeLeft--;
             
-            // Checkpoints (30s, 60s, 90s, 120s)
             let elapsed = GAME_DURATION - state.timeLeft;
             if (elapsed % 30 === 0 && elapsed > 0) {
                 recordCheckpoint(elapsed);
@@ -235,13 +237,11 @@
             if (state.timeLeft <= 0) endGame();
         }, 1000);
 
-        // 2. Stock Regen
         state.loops.regen = setInterval(() => {
             state.stock++;
             updateUI();
         }, STOCK_REGEN_TIME);
 
-        // 3. Auto Production (Yield)
         state.loops.auto = setInterval(() => {
             if (state.autoRate > 0) {
                 state.score += state.autoRate;
@@ -249,13 +249,12 @@
             }
         }, 1000);
 
-        // 4. Chart & UI Refresh (for cooldowns)
         state.loops.chart = setInterval(() => {
             let progress = (GAME_DURATION - state.timeLeft) / GAME_DURATION;
             state.history.push({ p: progress, v: state.score });
             drawChart();
-            updateUI(); // Check cooldowns frequently
-        }, 500); 
+            updateUI(); 
+        }, CHART_UPDATE_INTERVAL);
     }
 
     function performAction() {
@@ -270,42 +269,69 @@
     function handleInvestment() {
         let cost = 50;
         
-        // Checks
-        if (Date.now() < state.nextInvestTime) return; // Cooldown active
+        if (Date.now() < state.nextInvestTime) return; 
         if (state.score < cost) {
             log(`Need ${cost} output!`);
             return;
         }
 
-        // Execute
         state.score -= cost;
-        state.nextInvestTime = Date.now() + INVEST_COOLDOWN; // Set Cooldown
+        state.nextInvestTime = Date.now() + INVEST_COOLDOWN; 
         state.investCount++;
 
-        let addedYield = 0;
         let msg = "";
+        let effectColor = "";
 
         if (state.strategy === 'B') {
-            // Deterministic
-            addedYield = 1.5; 
+            // Stable
+            state.autoRate += 1.5; 
             msg = "Factory built (+1.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // EXTREME 50/50 Logic
+            // EXTREME MATH
             let r = Math.random(); 
-            
-            if (r < 0.50) { 
-                addedYield = 0; // 50% Total Fail
-                msg = "CRASH! Inv. Lost (+0/s)";
+            let flatBonus = 0;
+            let mult = 1;
+
+            if (r < 0.30) { 
+                // 30% : TOXIC ASSET
+                flatBonus = 2;
+                mult = 0.0; // BANKRUPTCY
+                msg = "⚠️ TOXIC ASSET! RATE CRASHED (x0)";
+                effectColor = "flash-red";
             } 
-            else {
-                addedYield = 4; // 50% Huge Win (vs 1.5 for B)
-                msg = "MOONSHOT! Yield (+4/s)";
+            else if (r < 0.60) {
+                // 30% : RESTRUCTURING (BAD)
+                flatBonus = 1;
+                mult = 0.5; // HALVED
+                msg = "📉 RESTRUCTURE. Rate Halved (x0.5)";
+                effectColor = "flash-red";
             }
+            else if (r < 0.80) {
+                // 20% : GROWTH (OK)
+                flatBonus = 4;
+                mult = 1.0; 
+                msg = "📈 GROWTH. Rate +4 (x1.0)";
+            }
+            else {
+                // 20% : UNICORN (JACKPOT)
+                flatBonus = 5;
+                mult = 1.5; // +50% GLOBAL BOOST
+                msg = "🦄 UNICORN! Rate Skyrocket (x1.5)";
+                effectColor = "flash-gold";
+            }
+
+            // FORMULA: (Current + Flat) * Multiplier
+            state.autoRate = (state.autoRate + flatBonus) * mult;
         }
 
-        state.autoRate += addedYield;
         log(msg);
+        if (effectColor) {
+            let box = document.querySelector('.hud-grid .stat-box:first-child');
+            box.classList.add(effectColor);
+            setTimeout(()=>box.classList.remove(effectColor), 500);
+        }
+        
         updateUI();
     }
 
@@ -322,13 +348,11 @@
         document.getElementById('score').innerText = Math.floor(state.score);
         document.getElementById('stock').innerText = state.stock;
 
-        // Invest Stats
         if (state.strategy !== 'A') {
             document.getElementById('invest-count').innerText = state.investCount;
             document.getElementById('auto-rate-disp').innerText = Math.round(state.autoRate * 10) / 10;
         }
 
-        // Main Button Logic
         const btn = document.getElementById('main-btn');
         const cdTxt = document.getElementById('cooldown-text');
         if (state.started) {
@@ -343,7 +367,6 @@
             }
         }
 
-        // Invest Button Logic (Cooldown & Cost)
         const invBtn = document.getElementById('invest-btn');
         if (state.strategy !== 'A') {
             let remaining = Math.ceil((state.nextInvestTime - Date.now()) / 1000);
@@ -353,7 +376,7 @@
                 invBtn.innerText = `WAIT... (${remaining}s)`;
                 invBtn.style.borderColor = "#555";
             } else {
-                let label = state.strategy === 'B' ? "🏭 BUY FACTORY (50)" : "🚀 RISK INVEST (50)";
+                let label = state.strategy === 'B' ? "🏭 BUY FACTORY (50)" : "🚀 LEVERAGE (50)";
                 if (state.score >= 50) {
                     invBtn.disabled = false;
                     invBtn.innerText = label;

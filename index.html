@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim V6 (Hardcore)</title>
+    <title>Enterprise Sim V7 (5min)</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -82,7 +82,7 @@
         <div>
             <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
             <h1 style="margin:0; color:var(--accent);">ENTERPRISE SIM</h1>
-            <p style="color:#888;">Select Strategy (2 min run)</p>
+            <p style="color:#888;">Duration: 5 Minutes</p>
         </div>
         <button class="btn" onclick="selectStrat('A')">STRATEGY A<br><small style="color:#aaa">Workforce (Labor Intensive)</small></button>
         <button class="btn" onclick="selectStrat('B')">STRATEGY B<br><small style="color:#aaa">Automation (Capital Intensive)</small></button>
@@ -106,18 +106,20 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>30s</th>
-                        <th>60s</th>
-                        <th>90s</th>
-                        <th>120s</th>
+                        <th>1m</th>
+                        <th>2m</th>
+                        <th>3m</th>
+                        <th>4m</th>
+                        <th>5m</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td id="cell-30">-</td>
                         <td id="cell-60">-</td>
-                        <td id="cell-90">-</td>
                         <td id="cell-120">-</td>
+                        <td id="cell-180">-</td>
+                        <td id="cell-240">-</td>
+                        <td id="cell-300">-</td>
                     </tr>
                 </tbody>
             </table>
@@ -156,10 +158,10 @@
 
 <script>
     // --- CONFIGURATION ---
-    const GAME_DURATION = 120; // 2 minutes
+    const GAME_DURATION = 300; // 5 minutes (Seconds)
     const STOCK_REGEN_TIME = 5000;
-    const INVEST_COOLDOWN = 5000;
-    const CHART_UPDATE_INTERVAL = 500; 
+    const INVEST_COOLDOWN = 10000; // 10 seconds Cooldown between investments
+    const CHART_UPDATE_INTERVAL = 2000; 
 
     // --- GAME STATE ---
     let state = {
@@ -224,8 +226,9 @@
         state.loops.timer = setInterval(() => {
             state.timeLeft--;
             
+            // Checkpoints at 60, 120, 180, 240, 300
             let elapsed = GAME_DURATION - state.timeLeft;
-            if (elapsed % 30 === 0 && elapsed > 0) {
+            if (elapsed % 60 === 0 && elapsed > 0) {
                 recordCheckpoint(elapsed);
             }
 
@@ -283,12 +286,12 @@
         let effectColor = "";
 
         if (state.strategy === 'B') {
-            // Stable
+            // Stable Industry
             state.autoRate += 1.5; 
             msg = "Factory built (+1.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // EXTREME MATH
+            // EXTREME MATH (Modified for 5 min balance)
             let r = Math.random(); 
             let flatBonus = 0;
             let mult = 1;
@@ -309,15 +312,15 @@
             }
             else if (r < 0.80) {
                 // 20% : GROWTH (OK)
-                flatBonus = 4;
+                flatBonus = 3;
                 mult = 1.0; 
-                msg = "📈 GROWTH. Rate +4 (x1.0)";
+                msg = "📈 GROWTH. Rate +3 (x1.0)";
             }
             else {
                 // 20% : UNICORN (JACKPOT)
                 flatBonus = 5;
-                mult = 1.5; // +50% GLOBAL BOOST
-                msg = "🦄 UNICORN! Rate Skyrocket (x1.5)";
+                mult = 1.25; // +25% GLOBAL BOOST
+                msg = "🦄 UNICORN! Rate Skyrocket (x1.25)";
                 effectColor = "flash-gold";
             }
 
@@ -415,7 +418,7 @@
 
         document.getElementById('controls-area').style.display = 'none'; 
         document.getElementById('timer').innerText = "DONE";
-        document.getElementById('log').innerText = "Test Complete.";
+        document.getElementById('log').innerText = "Simulation Complete.";
     }
 
     function log(msg) {

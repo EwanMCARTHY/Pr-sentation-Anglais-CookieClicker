@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim V4</title>
+    <title>Enterprise Sim FINAL</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -80,7 +80,7 @@
         </div>
         <button class="btn" onclick="selectStrat('A')">STRATEGY A<br><small style="color:#aaa">Workforce (Labor Intensive)</small></button>
         <button class="btn" onclick="selectStrat('B')">STRATEGY B<br><small style="color:#aaa">Automation (Capital Intensive)</small></button>
-        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">High Yield (Risk Intensive)</small></button>
+        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">Coin Flip (50% Win / 50% Lose)</small></button>
     </div>
 
     <div id="game-screen">
@@ -255,7 +255,7 @@
             state.history.push({ p: progress, v: state.score });
             drawChart();
             updateUI(); // Check cooldowns frequently
-        }, 500); // 0.5s refresh for smoother UI
+        }, 500); 
     }
 
     function performAction() {
@@ -291,20 +291,16 @@
             msg = "Factory built (+1.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // Probabilistic Yield
+            // EXTREME 50/50 Logic
             let r = Math.random(); 
             
-            if (r < 0.30) { 
-                addedYield = 0; // 30% Fail
-                msg = "Invest Failed (+0/s)";
+            if (r < 0.50) { 
+                addedYield = 0; // 50% Total Fail
+                msg = "CRASH! Inv. Lost (+0/s)";
             } 
-            else if (r < 0.70) {
-                addedYield = 2; // 40% Good
-                msg = "Standard Return (+2/s)";
-            }
             else {
-                addedYield = 6; // 30% Excellent
-                msg = "HIGH YIELD! (+6/s)";
+                addedYield = 4; // 50% Huge Win (vs 1.5 for B)
+                msg = "MOONSHOT! Yield (+4/s)";
             }
         }
 
@@ -329,7 +325,6 @@
         // Invest Stats
         if (state.strategy !== 'A') {
             document.getElementById('invest-count').innerText = state.investCount;
-            // Round to 1 decimal
             document.getElementById('auto-rate-disp').innerText = Math.round(state.autoRate * 10) / 10;
         }
 
@@ -366,7 +361,7 @@
                     invBtn.style.color = state.strategy === 'B' ? "var(--green)" : "var(--gold)";
                 } else {
                     invBtn.disabled = true;
-                    invBtn.innerText = label; // Keep label but grey out
+                    invBtn.innerText = label; 
                     invBtn.style.borderColor = "#555";
                     invBtn.style.color = "#555";
                 }

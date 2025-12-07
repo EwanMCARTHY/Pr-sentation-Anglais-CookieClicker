@@ -3,57 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cookie Factory Sim</title>
+    <title>Enterprise Sim V3</title>
     <style>
-        :root { --bg: #222; --panel: #333; --accent: #e67e22; --text: #eee; --green: #2ecc71; }
+        :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
             background-color: var(--bg); color: var(--text); 
             text-align: center; padding: 10px; margin: 0;
-            touch-action: manipulation; /* Prevents double-tap zoom */
+            touch-action: manipulation; 
         }
         
         /* Layout */
-        .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; height: 95vh; }
-        .header { border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 10px; }
-        h1 { margin: 0; font-size: 1.2rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 95vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
+        .timer-box { font-family: monospace; font-size: 1.5rem; color: var(--red); background: #000; padding: 5px 10px; border-radius: 4px; }
         
         /* Screens */
-        #setup-screen, #result-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        #setup-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 15px; }
         #game-screen { display: none; flex: 1; flex-direction: column; }
 
-        /* HUD */
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: var(--panel); padding: 10px; border-radius: 8px; border: 1px solid #444; }
-        .stat-label { font-size: 0.8rem; color: #aaa; }
-        .stat-val { font-size: 1.5rem; font-weight: bold; }
-        
-        /* The Chart */
-        .chart-container { background: #000; border: 1px solid #444; border-radius: 8px; height: 150px; position: relative; margin-bottom: 15px; overflow: hidden; }
+        /* HUD & Stats */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .stat-box { background: var(--panel); padding: 8px; border-radius: 6px; border: 1px solid #444; }
+        .stat-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 1.4rem; font-weight: bold; }
+        .sub-stat { font-size: 0.8rem; color: var(--green); margin-top: 2px; }
+
+        /* Chart & Table */
+        .chart-container { background: #111; border: 1px solid #444; border-radius: 6px; height: 140px; position: relative; margin-bottom: 10px; overflow: hidden; }
         svg { width: 100%; height: 100%; }
         .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
 
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; display: none; }
+        .data-table th, .data-table td { border: 1px solid #444; padding: 8px; text-align: center; }
+        .data-table th { background: #333; color: var(--accent); }
+
         /* Buttons */
         .btn { 
-            background: linear-gradient(145deg, #444, #333); 
+            background: linear-gradient(to bottom, #444, #333); 
             color: white; border: none; padding: 15px; 
-            font-size: 1.1rem; border-radius: 8px; 
-            cursor: pointer; margin: 5px 0; 
-            box-shadow: 0 4px #111; transition: transform 0.1s;
+            font-size: 1rem; border-radius: 6px; 
+            cursor: pointer; width: 100%; box-shadow: 0 3px #111;
         }
-        .btn:active { transform: translateY(4px); box-shadow: 0 0 #111; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 0 #111; }
         
         .btn-action { 
-            background: var(--accent); color: #000; font-weight: bold; font-size: 1.3rem; 
-            height: 80px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: var(--accent); color: #fff; font-weight: bold; font-size: 1.4rem; 
+            height: 90px; display: flex; align-items: center; justify-content: center;
+            margin-top: 10px; box-shadow: 0 5px #1a5276;
         }
-        .btn-action:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: translateY(4px); }
+        .btn-action:active { transform: translateY(4px); box-shadow: 0 0 #000; }
+        .btn-action:disabled { background: #555; color: #888; box-shadow: none; transform: translateY(4px); }
 
-        .btn-upgrade { border: 2px solid var(--green); color: var(--green); background: transparent; display: none; }
+        .btn-invest { 
+            border: 2px solid var(--gold); color: var(--gold); background: transparent; 
+            display: none; margin-top: 10px; font-weight: bold;
+        }
         
-        /* Stock Animation */
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(230, 126, 34, 0); } 100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); } }
-        .ready { animation: pulse 2s infinite; }
+        /* Log */
+        #log { font-family: monospace; font-size: 0.75rem; color: #888; height: 60px; overflow-y: hidden; text-align: left; border-top: 1px solid #333; padding-top: 5px; margin-top: auto; }
+
+        /* Animations */
+        .flash-green { animation: flashG 0.5s; }
+        .flash-red { animation: flashR 0.5s; }
+        @keyframes flashG { 0% { color: #fff; background: var(--green); } 100% { background: var(--bg); } }
+        @keyframes flashR { 0% { color: #fff; background: var(--red); } 100% { background: var(--bg); } }
 
     </style>
 </head>
@@ -62,232 +76,339 @@
 <div class="container">
 
     <div id="setup-screen">
-        <div style="font-size: 4rem; margin-bottom: 20px;">🏭🍪</div>
-        <h1>Cookie Factory<br>Manager</h1>
-        <p>Select your assigned division</p>
-        <button class="btn" onclick="selectStrat('A')">DIVISION A<br><small>Manual Labor</small></button>
-        <button class="btn" onclick="selectStrat('B')">DIVISION B<br><small>Automation R&D</small></button>
-        <button class="btn" onclick="selectStrat('C')">DIVISION C<br><small>High Risk Trading</small></button>
+        <div>
+            <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
+            <h1 style="margin:0; color:var(--accent);">ENTERPRISE SIM</h1>
+            <p style="color:#888;">Select Strategy</p>
+        </div>
+        <button class="btn" onclick="selectStrat('A')">STRATEGY A<br><small style="color:#aaa">Workforce (Labor Intensive)</small></button>
+        <button class="btn" onclick="selectStrat('B')">STRATEGY B<br><small style="color:#aaa">Automation (Capital Intensive)</small></button>
+        <button class="btn" onclick="selectStrat('C')">STRATEGY C<br><small style="color:#aaa">Venture Capital (High Risk)</small></button>
     </div>
 
     <div id="game-screen">
         <div class="header">
-            <h1><span id="team-name">...</span></h1>
-            <div id="timer" style="color: #e74c3c;">05:00</div>
+            <div style="font-weight:bold; color:#ccc;" id="team-name">TEAM</div>
+            <div id="timer" class="timer-box">WAITING...</div>
         </div>
 
         <div class="chart-container">
             <svg id="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <polyline id="chart-line" class="chart-line" points="0,100 100,100"/>
             </svg>
-            <div style="position: absolute; top:5px; left:5px; font-size:0.7rem; color:#666;">Production Curve</div>
+            <div style="position: absolute; top:5px; left:5px; font-size:0.6rem; color:#666;">YIELD CURVE</div>
         </div>
 
         <div class="hud-grid">
             <div class="stat-box">
-                <div class="stat-label">TOTAL COOKIES</div>
+                <div class="stat-label">TOTAL OUTPUT</div>
                 <div class="stat-val" id="score">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">WORK PERMITS</div>
+                <div class="stat-label">STAMINA (Clicks)</div>
                 <div class="stat-val" id="stock">0</div>
+                <div class="sub-stat" id="regen-msg">Regen in 5s</div>
             </div>
         </div>
 
-        <button id="main-btn" class="btn btn-action" onclick="performAction()">
-            <span>🍪 PRODUCE</span>
-        </button>
-        <div id="cooldown-msg" style="font-size: 0.8rem; color: #888; margin-top: 5px;">Generating Work Permit...</div>
+        <div id="b-stats" style="display:none; font-size:0.8rem; color:var(--green); margin-bottom:5px;">
+            Factories: <span id="factories-count">0</span> | Auto-Rate: +<span id="auto-rate-disp">0</span>/s
+        </div>
 
-        <button id="upg-btn" class="btn btn-upgrade" onclick="buyUpgrade()">
-            🏭 BUY FACTORY (Cost: 50)
-        </button>
-        
-        <div style="flex:1;"></div>
-        <div id="log" style="font-size: 0.8rem; color: #666; height: 50px; overflow: hidden; text-align: left;">System initialized...</div>
-    </div>
+        <div id="controls-area">
+            <button id="main-btn" class="btn btn-action" onclick="handleMainClick()">
+                START / PRODUCE
+            </button>
+            <div id="cooldown-text" style="font-size:0.8rem; color:#666; margin-top:5px; visibility:hidden;">Recovering Stamina...</div>
 
-    <div id="result-screen" style="display:none;">
-        <h1>SHIFT ENDED</h1>
-        <p>Final Production:</p>
-        <div style="font-size: 4rem; color: var(--accent); font-weight: bold;" id="final-score">0</div>
-        <div style="font-size: 0.9rem; color: #888;">(Do not close this page)</div>
+            <button id="invest-btn" class="btn btn-invest" onclick="handleInvestment()">
+                </button>
+        </div>
+
+        <table id="result-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>1 min</th>
+                    <th>2 min</th>
+                    <th>3 min</th>
+                    <th>4 min</th>
+                    <th>5 min</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="table-row">
+                    <td>Score</td>
+                    <td id="s-1">-</td>
+                    <td id="s-2">-</td>
+                    <td id="s-3">-</td>
+                    <td id="s-4">-</td>
+                    <td id="s-5">-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div id="log">System Ready. Wait for signal to start.</div>
     </div>
 
 </div>
 
 <script>
-    // --- CONFIG ---
+    // --- CONFIGURATION ---
     const GAME_DURATION = 300; // 5 minutes
-    const STOCK_REGEN_TIME = 5000; // 5 seconds per stock
-    const CHART_UPDATE_INTERVAL = 2000; // Update chart every 2s
+    const STOCK_REGEN_TIME = 5000;
+    const CHART_UPDATE_INTERVAL = 2000; 
 
-    // --- STATE ---
+    // --- GAME STATE ---
     let state = {
+        started: false,
         score: 0,
-        stock: 0, // "Work Permits"
+        stock: 2, // Start with some stamina
         strategy: '',
         timeLeft: GAME_DURATION,
+        history: [], 
+        checkpoints: {},
+        
+        // Strat B specific
+        factories: 0,
         autoRate: 0,
-        history: [], // For the chart
-        startTime: 0
+
+        // Cooldown timer ref
+        regenTimer: null
     };
 
-    let timers = {};
+    let loops = {}; // Store intervals
 
     function selectStrat(s) {
         state.strategy = s;
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('game-screen').style.display = 'flex';
-        
-        const teamNames = {
-            'A': 'The Grinders (Manual)',
-            'B': 'The Investors (Auto)',
-            'C': 'The Gamblers (Risk)'
-        };
-        document.getElementById('team-name').innerText = teamNames[s];
 
-        if (s === 'B') {
-            document.getElementById('upg-btn').style.display = 'block';
+        const btn = document.getElementById('main-btn');
+        const invBtn = document.getElementById('invest-btn');
+        const teamLbl = document.getElementById('team-name');
+
+        if (s === 'A') {
+            teamLbl.innerText = "STRAT A: WORKFORCE";
+            document.documentElement.style.setProperty('--accent', '#3498db'); // Blue
+        } 
+        else if (s === 'B') {
+            teamLbl.innerText = "STRAT B: AUTOMATION";
+            document.documentElement.style.setProperty('--accent', '#2ecc71'); // Green
+            invBtn.style.display = 'block';
+            invBtn.innerHTML = "🏭 BUY FACTORY (Cost: 50)";
+            document.getElementById('b-stats').style.display = 'block';
+        } 
+        else if (s === 'C') {
+            teamLbl.innerText = "STRAT C: VENTURE CAP.";
+            document.documentElement.style.setProperty('--accent', '#f1c40f'); // Gold
+            invBtn.style.display = 'block';
+            invBtn.innerHTML = "🚀 VENTURE DEAL (Cost: 50)";
         }
-        
-        // Initial Stock
-        state.stock = 2; // Start with 2 clicks ready
+
         updateUI();
-        
-        startGame();
+    }
+
+    // Triggered by the main button
+    function handleMainClick() {
+        if (!state.started) {
+            startGame();
+            // Don't produce on the start click, just start
+            document.getElementById('main-btn').innerText = "PRODUCE (Click)";
+            return;
+        }
+
+        performAction();
     }
 
     function startGame() {
-        state.startTime = Date.now();
+        state.started = true;
+        log("SIMULATION STARTED.");
         
-        // 1. Global Timer (Countdown)
-        timers.global = setInterval(() => {
+        // 1. Timer
+        loops.timer = setInterval(() => {
             state.timeLeft--;
+            
+            // Checkpoints logic
+            let elapsed = GAME_DURATION - state.timeLeft;
+            if (elapsed % 60 === 0 && elapsed > 0) {
+                recordCheckpoint(elapsed / 60);
+            }
+
+            // Display
             let mins = Math.floor(state.timeLeft / 60).toString().padStart(2, '0');
             let secs = (state.timeLeft % 60).toString().padStart(2, '0');
             document.getElementById('timer').innerText = `${mins}:${secs}`;
+            document.getElementById('timer').style.color = "#fff"; // active color
+
             if (state.timeLeft <= 0) endGame();
         }, 1000);
 
-        // 2. Stock Regen (The Cooldown Mechanic)
-        timers.regen = setInterval(() => {
+        // 2. Stock Regen
+        loops.regen = setInterval(() => {
             state.stock++;
-            log("New Work Permit granted.");
             updateUI();
         }, STOCK_REGEN_TIME);
 
-        // 3. Auto-Production (For Strat B)
-        timers.auto = setInterval(() => {
+        // 3. Auto Production (B)
+        loops.auto = setInterval(() => {
             if (state.autoRate > 0) {
                 state.score += state.autoRate;
                 updateUI();
             }
         }, 1000);
 
-        // 4. Chart Updater
-        timers.chart = setInterval(() => {
-            // Add data point
-            let progress = (GAME_DURATION - state.timeLeft) / GAME_DURATION; // 0 to 1
+        // 4. Chart
+        loops.chart = setInterval(() => {
+            let progress = (GAME_DURATION - state.timeLeft) / GAME_DURATION;
             state.history.push({ p: progress, v: state.score });
             drawChart();
         }, CHART_UPDATE_INTERVAL);
     }
 
     function performAction() {
-        // Must have stock to click
         if (state.stock <= 0) {
-            log("No Work Permits! Wait...");
+            log("Exhausted! Wait for regen.");
             return;
         }
 
-        let amount = 0;
-        let consumedStock = 1;
+        let gain = 5; // Base gain for everyone
+        
+        // Strat A is manual labor optimized, maybe slightly better clicks? 
+        // Let's keep clicks equal to show that B and C need capital to diverge.
+        
+        state.score += gain;
+        state.stock--;
+        
+        updateUI();
+    }
 
-        if (state.strategy === 'A') {
-            amount = 5; // Standard efficiency
-        } else if (state.strategy === 'B') {
-            amount = 5; // Need to save these to buy factories
-        } else if (state.strategy === 'C') {
-            // High Variance
-            let r = Math.random();
-            if (r < 0.3) { amount = -10; log("Production Error! (-10)"); }
-            else if (r > 0.8) { amount = 25; log("Market Boom! (+25)"); }
-            else amount = 5;
+    function handleInvestment() {
+        let cost = 50;
+        
+        if (state.score < cost) {
+            log(`Need ${cost} capital!`);
+            return;
         }
 
-        state.score += amount;
-        if (state.score < 0) state.score = 0;
-        state.stock -= consumedStock;
+        // Pay cost
+        state.score -= cost;
+
+        if (state.strategy === 'B') {
+            // Permanent Upgrade
+            state.factories++;
+            state.autoRate += 1.5; // NERFED from 2
+            log(`Factory built! Output +1.5/s`);
+        } 
+        else if (state.strategy === 'C') {
+            // One-time risky return
+            let r = Math.random(); // 0.0 to 1.0
+            let outcome = 0;
+            let msg = "";
+
+            if (r < 0.20) { 
+                outcome = 0; // 20% Total fail
+                msg = "Startup Failed (0)"; 
+                flashColor('red');
+            } 
+            else if (r < 0.60) {
+                outcome = 40; // 40% Small Loss
+                msg = "Bad Exit (40)";
+            }
+            else if (r < 0.90) {
+                outcome = 80; // 30% Profit
+                msg = "Good ROI (80)";
+                flashColor('green');
+            }
+            else {
+                outcome = 200; // 10% Unicorn
+                msg = "UNICORN! (200)";
+                flashColor('gold');
+            }
+
+            state.score += outcome;
+            log(`Deal result: ${msg}`);
+        }
 
         updateUI();
     }
 
-    function buyUpgrade() {
-        // Only for Strat B
-        let cost = 50;
-        if (state.score >= cost) {
-            state.score -= cost;
-            state.autoRate += 2; // +2 cookies/sec
-            log(`Factory built! Auto: +${state.autoRate}/s`);
-            updateUI();
-        } else {
-            log(`Need ${cost} cookies!`);
-        }
+    function recordCheckpoint(minute) {
+        state.checkpoints[minute] = Math.floor(state.score);
+        // Update table immediately if visible, or just store it
+        let cell = document.getElementById(`s-${minute}`);
+        if(cell) cell.innerText = Math.floor(state.score);
+        log(`Min ${minute} stats recorded.`);
     }
 
     function updateUI() {
         document.getElementById('score').innerText = Math.floor(state.score);
         document.getElementById('stock').innerText = state.stock;
 
+        // Button State
         const btn = document.getElementById('main-btn');
-        if (state.stock > 0) {
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            document.getElementById('cooldown-msg').style.visibility = 'hidden';
-            btn.classList.add('ready');
-        } else {
-            btn.disabled = true;
-            btn.style.opacity = "0.5";
-            document.getElementById('cooldown-msg').style.visibility = 'visible';
-            btn.classList.remove('ready');
+        const cdTxt = document.getElementById('cooldown-text');
+        
+        if (state.started) {
+            if (state.stock > 0) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                cdTxt.style.visibility = 'hidden';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+                cdTxt.style.visibility = 'visible';
+            }
         }
+
+        // Stats for B
+        if (state.strategy === 'B') {
+            document.getElementById('factories-count').innerText = state.factories;
+            document.getElementById('auto-rate-disp').innerText = state.autoRate;
+        }
+    }
+
+    function drawChart() {
+        if (state.history.length < 2) return;
+        const line = document.getElementById('chart-line');
+        
+        let maxVal = 100;
+        state.history.forEach(h => { if(h.v > maxVal) maxVal = h.v; });
+        
+        let points = state.history.map(h => {
+            let x = h.p * 100;
+            let y = 100 - ((h.v / maxVal) * 100); 
+            return `${x},${y}`;
+        }).join(" ");
+        line.setAttribute('points', points);
+    }
+
+    function endGame() {
+        for (let t in loops) clearInterval(loops[t]);
+        
+        // Final checkpoint
+        recordCheckpoint(5);
+        drawChart(); // Final draw
+
+        // UI Transformation for Results
+        document.getElementById('controls-area').style.display = 'none'; // Hide buttons
+        document.getElementById('timer').innerText = "FINISHED";
+        document.getElementById('result-table').style.display = 'table'; // Show table
+        
+        log("Simulation Complete. Analyze data.");
     }
 
     function log(msg) {
         document.getElementById('log').innerText = `> ${msg}`;
     }
 
-    function drawChart() {
-        if (state.history.length < 2) return;
-
-        const svg = document.getElementById('chart-svg');
-        const line = document.getElementById('chart-line');
-        
-        // Find max score for scaling Y
-        let maxVal = 100;
-        state.history.forEach(h => { if(h.v > maxVal) maxVal = h.v; });
-        
-        // Build points string "x,y x,y"
-        // X is 0-100 (percentage of time)
-        // Y is 100-0 (inverted percentage of value)
-        let points = state.history.map(h => {
-            let x = h.p * 100;
-            let y = 100 - ((h.v / maxVal) * 100); 
-            return `${x},${y}`;
-        }).join(" ");
-
-        line.setAttribute('points', points);
+    function flashColor(c) {
+        let color = c === 'red' ? '#e74c3c' : (c === 'gold' ? '#f1c40f' : '#2ecc71');
+        let hud = document.querySelector('.hud-grid');
+        hud.style.backgroundColor = color;
+        setTimeout(() => { hud.style.backgroundColor = 'transparent'; }, 200);
     }
 
-    function endGame() {
-        // Stop all timers
-        for (let t in timers) clearInterval(timers[t]);
-        
-        document.getElementById('game-screen').style.display = 'none';
-        document.getElementById('result-screen').style.display = 'flex';
-        document.getElementById('final-score').innerText = Math.floor(state.score);
-    }
 </script>
 </body>
 </html>

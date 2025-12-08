@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim V7.1</title>
+    <title>Enterprise Sim V8</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -133,7 +133,8 @@
             <div class="stat-box">
                 <div class="stat-label">STAMINA</div>
                 <div class="stat-val" id="stock">0</div>
-                <div class="sub-stat" id="regen-msg">Regen in 2s</div> </div>
+                <div class="sub-stat" id="regen-msg">Regen in 2s</div>
+            </div>
         </div>
 
         <div id="invest-stats" style="display:none; font-size:0.8rem; color:var(--green); margin-bottom:5px;">
@@ -158,15 +159,15 @@
 <script>
     // --- CONFIGURATION ---
     const GAME_DURATION = 300; // 5 minutes
-    const STOCK_REGEN_TIME = 2000; // UPDATE: 2 seconds per stamina
-    const INVEST_COOLDOWN = 10000; // 10 seconds Cooldown between investments
+    const STOCK_REGEN_TIME = 2000; // 2 seconds per stamina
+    const INVEST_COOLDOWN = 10000; // 10 seconds Cooldown
     const CHART_UPDATE_INTERVAL = 2000; 
 
     // --- GAME STATE ---
     let state = {
         started: false,
         score: 0,
-        stock: 3, // Start with a bit more stock for fast start
+        stock: 3, 
         strategy: '',
         timeLeft: GAME_DURATION,
         history: [], 
@@ -225,7 +226,7 @@
         state.loops.timer = setInterval(() => {
             state.timeLeft--;
             
-            // Checkpoints at 60, 120, 180, 240, 300
+            // Checkpoints
             let elapsed = GAME_DURATION - state.timeLeft;
             if (elapsed % 60 === 0 && elapsed > 0) {
                 recordCheckpoint(elapsed);
@@ -262,7 +263,7 @@
     function performAction() {
         if (state.stock <= 0) return;
 
-        let gain = 5; // UPDATE: Base gain confirmed at 5
+        let gain = 5; 
         state.score += gain;
         state.stock--;
         updateUI();
@@ -285,41 +286,41 @@
         let effectColor = "";
 
         if (state.strategy === 'B') {
-            // Stable Industry
-            state.autoRate += 1.5; 
-            msg = "Factory built (+1.5/s)";
+            // Stable Industry NERFED (+0.5 instead of +1.5)
+            state.autoRate += 0.5; 
+            msg = "Factory built (+0.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // EXTREME MATH (Balanced for 5 mins)
+            // EXTREME MATH (Nerfed proportionally)
             let r = Math.random(); 
             let flatBonus = 0;
             let mult = 1;
 
             if (r < 0.30) { 
                 // 30% : TOXIC ASSET
-                flatBonus = 2;
+                flatBonus = 0.5;
                 mult = 0.0; // BANKRUPTCY
                 msg = "⚠️ TOXIC ASSET! RATE CRASHED (x0)";
                 effectColor = "flash-red";
             } 
             else if (r < 0.60) {
                 // 30% : RESTRUCTURING (BAD)
-                flatBonus = 1;
+                flatBonus = 0.2;
                 mult = 0.5; // HALVED
                 msg = "📉 RESTRUCTURE. Rate Halved (x0.5)";
                 effectColor = "flash-red";
             }
             else if (r < 0.80) {
-                // 20% : GROWTH (OK)
-                flatBonus = 3;
+                // 20% : GROWTH (OK) - 2x better than B
+                flatBonus = 1.0;
                 mult = 1.0; 
-                msg = "📈 GROWTH. Rate +3 (x1.0)";
+                msg = "📈 GROWTH. Rate +1.0 (x1.0)";
             }
             else {
                 // 20% : UNICORN (JACKPOT)
-                flatBonus = 5;
-                mult = 1.25; // +25% GLOBAL BOOST
-                msg = "🦄 UNICORN! Rate Skyrocket (x1.25)";
+                flatBonus = 2.0;
+                mult = 1.2; // +20% GLOBAL BOOST
+                msg = "🦄 UNICORN! Rate Skyrocket (x1.2)";
                 effectColor = "flash-gold";
             }
 

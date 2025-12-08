@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Sim V7 (5min)</title>
+    <title>Enterprise Sim V7.1</title>
     <style>
         :root { --bg: #1e1e1e; --panel: #2d2d2d; --accent: #3498db; --text: #ecf0f1; --green: #2ecc71; --red: #e74c3c; --gold: #f1c40f; }
         body { 
@@ -133,8 +133,7 @@
             <div class="stat-box">
                 <div class="stat-label">STAMINA</div>
                 <div class="stat-val" id="stock">0</div>
-                <div class="sub-stat" id="regen-msg">Regen in 5s</div>
-            </div>
+                <div class="sub-stat" id="regen-msg">Regen in 2s</div> </div>
         </div>
 
         <div id="invest-stats" style="display:none; font-size:0.8rem; color:var(--green); margin-bottom:5px;">
@@ -158,8 +157,8 @@
 
 <script>
     // --- CONFIGURATION ---
-    const GAME_DURATION = 300; // 5 minutes (Seconds)
-    const STOCK_REGEN_TIME = 5000;
+    const GAME_DURATION = 300; // 5 minutes
+    const STOCK_REGEN_TIME = 2000; // UPDATE: 2 seconds per stamina
     const INVEST_COOLDOWN = 10000; // 10 seconds Cooldown between investments
     const CHART_UPDATE_INTERVAL = 2000; 
 
@@ -167,7 +166,7 @@
     let state = {
         started: false,
         score: 0,
-        stock: 2, 
+        stock: 3, // Start with a bit more stock for fast start
         strategy: '',
         timeLeft: GAME_DURATION,
         history: [], 
@@ -212,7 +211,7 @@
     function handleMainClick() {
         if (!state.started) {
             startGame();
-            document.getElementById('main-btn').innerText = "PRODUCE";
+            document.getElementById('main-btn').innerText = "PRODUCE (Click)";
             return;
         }
         performAction();
@@ -263,7 +262,7 @@
     function performAction() {
         if (state.stock <= 0) return;
 
-        let gain = 5; 
+        let gain = 5; // UPDATE: Base gain confirmed at 5
         state.score += gain;
         state.stock--;
         updateUI();
@@ -291,7 +290,7 @@
             msg = "Factory built (+1.5/s)";
         } 
         else if (state.strategy === 'C') {
-            // EXTREME MATH (Modified for 5 min balance)
+            // EXTREME MATH (Balanced for 5 mins)
             let r = Math.random(); 
             let flatBonus = 0;
             let mult = 1;
